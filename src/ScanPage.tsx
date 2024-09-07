@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { QrReader } from 'react-qr-reader';
+import QrScanner from 'qr-scanner'; // Asigură-te că folosești componenta/corectă importată
 
 const ScanPage: React.FC = () => {
   const [scannedData, setScannedData] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'success' | 'error' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleScan = async (data: string | null) => {
+  const handleScan = async (data: string) => {
     if (data) {
       setScannedData(data); // Stochează datele scanate pentru debugging
       try {
@@ -40,22 +40,29 @@ const ScanPage: React.FC = () => {
     }
   };
 
+  const startScanner = () => {
+    const videoElement = document.getElementById('qr-video') as HTMLVideoElement;
+    if (videoElement) {
+      const qrScanner = new QrScanner(
+        videoElement,
+        (result) => handleScan(result.data), // Gestionează rezultatul scanării
+        { preferredCamera: 'environment' } // Opțiuni de cameră
+      );
+      qrScanner.start();
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto p-6 bg-white rounded shadow mt-8">
       <h2 className="text-2xl font-bold mb-6">Scanează QR</h2>
-      <div style={{ width: '100%' }}>
-        <QrReader
-          onResult={(result, error) => {
-            if (!!result) {
-              handleScan(result?.getText() || null);
-            }
-            if (!!error) {
-              console.info(error);
-            }
-          }}
-          constraints={{ facingMode: 'environment' }}
-          videoContainerStyle={{ width: '100%' }}
-        />
+      <div>
+        <video id="qr-video" width="100%"></video> {/* Video pentru camera */}
+        <button
+          onClick={startScanner}
+          className="w-full bg-blue-500 text-white py-2 rounded mt-4"
+        >
+          Pornește Scanner-ul
+        </button>
       </div>
       {scannedData && (
         <p className="mt-4 p-2 bg-gray-100 text-gray-700 rounded">
